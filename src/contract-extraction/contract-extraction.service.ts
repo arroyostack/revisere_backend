@@ -1,9 +1,11 @@
-import { Injectable, UnprocessableEntityException } from '@nestjs/common';
-import { generateObject } from 'ai';
-import { LanguageModelV1 } from 'ai';
-import { ExtractedContractDataSchema, ExtractedContractData } from './schemas/extracted-contract-data.schema';
-import { AiProviderFactoryService } from '../ai-provider/ai-provider-factory.service';
-import { AiProviderConfiguration } from '../ai-provider/interfaces/ai-provider-configuration.interface';
+import { Injectable, UnprocessableEntityException } from "@nestjs/common";
+import {
+  ExtractedContractDataSchema,
+  ExtractedContractData,
+} from "./schemas/extracted-contract-data.schema";
+import { AiProviderFactoryService } from "../ai-provider/ai-provider-factory.service";
+import { AiProviderConfiguration } from "../ai-provider/interfaces/ai-provider-configuration.interface";
+import { generateStructuredObject } from "../ai-provider/generate-structured-object";
 
 @Injectable()
 export class ContractExtractionService {
@@ -13,8 +15,6 @@ export class ContractExtractionService {
     contractPlainText: string,
     providerConfiguration: AiProviderConfiguration,
   ): Promise<ExtractedContractData> {
-    const languageModel = this.aiProviderFactory.resolveLanguageModel(providerConfiguration);
-
     const systemPrompt = `You are a legal document analysis expert specializing in extracting structured data from contracts.
 Your task is to carefully analyze the contract text provided and extract all relevant information into the specified JSON format.
 
@@ -35,14 +35,13 @@ ${contractPlainText}
 </contract_text>`;
 
     try {
-      const result = await generateObject({
-        model: languageModel,
+      return await generateStructuredObject({
+        aiProviderFactory: this.aiProviderFactory,
+        providerConfiguration,
         schema: ExtractedContractDataSchema,
         system: systemPrompt,
         prompt: userPrompt,
       });
-
-      return result.object;
     } catch (error) {
       if (error instanceof Error) {
         throw new UnprocessableEntityException(
@@ -50,7 +49,7 @@ ${contractPlainText}
         );
       }
       throw new UnprocessableEntityException(
-        'Failed to extract contract data: Unknown error',
+        "Failed to extract contract data: Unknown error",
       );
     }
   }

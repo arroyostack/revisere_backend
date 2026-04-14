@@ -1,18 +1,16 @@
 import {
   Controller,
   Post,
-  UploadedFiles,
+  UploadedFile,
   UseInterceptors,
   BadRequestException,
-  Body,
 } from '@nestjs/common';
-import { FilesInterceptor } from '@nestjs/platform-express';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { ContractComparisonService } from './contract-comparison.service';
 import { DocumentParsingService } from '../document-parsing/document-parsing.service';
 import { ContractFileValidationPipe } from '../contract-upload/pipes/contract-file-validation.pipe';
 import { ContractComparisonResult } from './schemas/contract-comparison-result.schema';
-import { AiProviderRequestDtoSchema } from '../common/dto/ai-provider-request.dto';
-import { AiProviderConfiguration } from '../ai-provider/interfaces/ai-provider-configuration.interface';
+import { AiConfigService } from '../ai-config/ai-config.service';
 import { CONTRACT_FILE_UPLOAD } from '../common/constants/contract-file-upload.constant';
 
 @Controller('contract-comparison')
@@ -20,15 +18,17 @@ export class ContractComparisonController {
   constructor(
     private readonly documentParsingService: DocumentParsingService,
     private readonly contractComparisonService: ContractComparisonService,
+    private readonly aiConfigService: AiConfigService,
   ) {}
 
   @Post('compare')
   @UseInterceptors(
-    FilesInterceptor(
-      ['firstContractFile', 'secondContractFile'],
-      2,
+    FileFieldsInterceptor(
+      [
+        { name: 'firstContractFile', maxCount: 1 },
+        { name: 'secondContractFile', maxCount: 1 },
+      ],
       {
-        storage: undefined,
         limits: {
           fileSize: CONTRACT_FILE_UPLOAD.MAX_FILE_SIZE_BYTES,
         },
@@ -36,36 +36,36 @@ export class ContractComparisonController {
     ),
   )
   async compareContracts(
-    @UploadedFiles('firstContractFile', new ContractFileValidationPipe())
-    firstContractFile: Express.Multer.File,
-    @UploadedFiles('secondContractFile', new ContractFileValidationPipe())
-    secondContractFile: Express.Multer.File,
-    @Body('providerConfiguration') providerConfigurationJson: string,
+    @UploadedFile('firstContractFile') firstContractFile: Express.Multer.File | undefined,
+    @UploadedFile('secondContractFile') secondContractFile: Express.Multer.File | undefined,
   ): Promise<ContractComparisonResult> {
-    let providerConfiguration: AiProviderConfiguration;
-
-    try {
-      const parsed = JSON.parse(providerConfigurationJson);
-      providerConfiguration = AiProviderRequestDtoSchema.parse(parsed);
-    } catch {
-      throw new BadRequestException(
-        'Invalid providerConfiguration. Must be valid JSON matching the required schema.',
-      );
+    // Validate files are present
+    if (!firstContractFile) {
+      throw new BadRequestException('First contract file is required');
+    }
+    if (!secondContractFile) {
+      throw new BadRequestException('Second contract file is required');
     }
 
-    const firstContract = firstContractFile[0] || firstContractFile;
-    const secondContract = secondContractFile[0] || secondContractFile;
+    // Validate files with the pipe
+    const firstValidationPipe = new ContractFileValidationPipe();
+    const secondValidationPipe = new ContractFileValidationPipe();
+
+    const validatedFirstFile = firstValidationPipe.transform(firstContractFile);
+    const validatedSecondFile = secondValidationPipe.transform(secondContractFile);
+
+    const providerConfiguration = this.aiConfigService.getProviderConfiguration();
 
     const [firstParsedDocument, secondParsedDocument] = await Promise.all([
       this.documentParsingService.parseDocument(
-        firstContract.buffer,
-        firstContract.originalname,
-        firstContract.mimetype,
+        validatedFirstFile.buffer,
+        validatedFirstFile.originalname,
+        validatedFirstFile.mimetype,
       ),
       this.documentParsingService.parseDocument(
-        secondContract.buffer,
-        secondContract.originalname,
-        secondContract.mimetype,
+        validatedSecondFile.buffer,
+        validatedSecondFile.originalname,
+        validatedSecondFile.mimetype,
       ),
     ]);
 

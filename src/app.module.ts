@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { AiConfigModule } from './ai-config/ai-config.module';
 import { AiProviderModule } from './ai-provider/ai-provider.module';
 import { DocumentParsingModule } from './document-parsing/document-parsing.module';
 import { ContractExtractionModule } from './contract-extraction/contract-extraction.module';
@@ -13,6 +14,7 @@ import { ContractComparisonModule } from './contract-comparison/contract-compari
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    AiConfigModule,
     AiProviderModule,
     DocumentParsingModule,
     ContractExtractionModule,

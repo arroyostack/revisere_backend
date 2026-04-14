@@ -1,8 +1,11 @@
-import { Injectable, UnprocessableEntityException } from '@nestjs/common';
-import { generateObject } from 'ai';
-import { ContractSummaryResultSchema, ContractSummaryResult } from './schemas/contract-summary-result.schema';
-import { AiProviderFactoryService } from '../ai-provider/ai-provider-factory.service';
-import { AiProviderConfiguration } from '../ai-provider/interfaces/ai-provider-configuration.interface';
+import { Injectable, UnprocessableEntityException } from "@nestjs/common";
+import {
+  ContractSummaryResultSchema,
+  ContractSummaryResult,
+} from "./schemas/contract-summary-result.schema";
+import { AiProviderFactoryService } from "../ai-provider/ai-provider-factory.service";
+import { AiProviderConfiguration } from "../ai-provider/interfaces/ai-provider-configuration.interface";
+import { generateStructuredObject } from "../ai-provider/generate-structured-object";
 
 @Injectable()
 export class ContractSummaryService {
@@ -12,8 +15,6 @@ export class ContractSummaryService {
     contractPlainText: string,
     providerConfiguration: AiProviderConfiguration,
   ): Promise<ContractSummaryResult> {
-    const languageModel = this.aiProviderFactory.resolveLanguageModel(providerConfiguration);
-
     const systemPrompt = `You are a legal document simplification expert specializing in explaining contracts in plain language.
 Your task is to carefully analyze the contract text provided and create a comprehensive, easy-to-understand summary.
 
@@ -33,14 +34,13 @@ ${contractPlainText}
 </contract_text>`;
 
     try {
-      const result = await generateObject({
-        model: languageModel,
+      return await generateStructuredObject({
+        aiProviderFactory: this.aiProviderFactory,
+        providerConfiguration,
         schema: ContractSummaryResultSchema,
         system: systemPrompt,
         prompt: userPrompt,
       });
-
-      return result.object;
     } catch (error) {
       if (error instanceof Error) {
         throw new UnprocessableEntityException(
@@ -48,7 +48,7 @@ ${contractPlainText}
         );
       }
       throw new UnprocessableEntityException(
-        'Failed to summarize contract: Unknown error',
+        "Failed to summarize contract: Unknown error",
       );
     }
   }

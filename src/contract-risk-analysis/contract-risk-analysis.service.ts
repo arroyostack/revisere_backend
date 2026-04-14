@@ -1,8 +1,11 @@
-import { Injectable, UnprocessableEntityException } from '@nestjs/common';
-import { generateObject } from 'ai';
-import { ContractRiskAnalysisResultSchema, ContractRiskAnalysisResult } from './schemas/contract-risk-analysis-result.schema';
-import { AiProviderFactoryService } from '../ai-provider/ai-provider-factory.service';
-import { AiProviderConfiguration } from '../ai-provider/interfaces/ai-provider-configuration.interface';
+import { Injectable, UnprocessableEntityException } from "@nestjs/common";
+import {
+  ContractRiskAnalysisResultSchema,
+  ContractRiskAnalysisResult,
+} from "./schemas/contract-risk-analysis-result.schema";
+import { AiProviderFactoryService } from "../ai-provider/ai-provider-factory.service";
+import { AiProviderConfiguration } from "../ai-provider/interfaces/ai-provider-configuration.interface";
+import { generateStructuredObject } from "../ai-provider/generate-structured-object";
 
 @Injectable()
 export class ContractRiskAnalysisService {
@@ -12,8 +15,6 @@ export class ContractRiskAnalysisService {
     contractPlainText: string,
     providerConfiguration: AiProviderConfiguration,
   ): Promise<ContractRiskAnalysisResult> {
-    const languageModel = this.aiProviderFactory.resolveLanguageModel(providerConfiguration);
-
     const systemPrompt = `You are a legal risk analysis expert specializing in identifying potential risks and red flags in contracts.
 Your task is to carefully analyze the contract text provided and identify all potential risks.
 
@@ -33,14 +34,13 @@ ${contractPlainText}
 </contract_text>`;
 
     try {
-      const result = await generateObject({
-        model: languageModel,
+      return await generateStructuredObject({
+        aiProviderFactory: this.aiProviderFactory,
+        providerConfiguration,
         schema: ContractRiskAnalysisResultSchema,
         system: systemPrompt,
         prompt: userPrompt,
       });
-
-      return result.object;
     } catch (error) {
       if (error instanceof Error) {
         throw new UnprocessableEntityException(
@@ -48,7 +48,7 @@ ${contractPlainText}
         );
       }
       throw new UnprocessableEntityException(
-        'Failed to analyze contract risks: Unknown error',
+        "Failed to analyze contract risks: Unknown error",
       );
     }
   }

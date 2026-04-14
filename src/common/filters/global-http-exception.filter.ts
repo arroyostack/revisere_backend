@@ -11,7 +11,15 @@ import { ApiErrorResponse } from '../types/api-error-response.type';
 @Catch()
 export class GlobalHttpExceptionFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost): void {
-    const response = host.switchToHttp().getResponse<Response>();
+    const ctx = host.switchToHttp();
+    const request = ctx.getRequest();
+    const response = ctx.getResponse<Response>();
+    
+    console.error('=== GLOBAL EXCEPTION FILTER ===');
+    console.error('URL:', request.method, request.url);
+    console.error('Status:', exception instanceof HttpException ? (exception as HttpException).getStatus() : 'N/A');
+    console.error('Exception:', exception);
+    console.error('=============================');
     
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let message = 'Internal server error';

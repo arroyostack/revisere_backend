@@ -19,7 +19,7 @@ async function bootstrap(): Promise<void> {
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
-      forbidNonWhitelisted: true,
+      forbidNonWhitelisted: false, // Allow extra properties for multipart form data
       transform: true,
     }),
   );
