@@ -1,8 +1,11 @@
-import { Injectable, UnprocessableEntityException } from '@nestjs/common';
-import { generateObject } from 'ai';
-import { ContractComparisonResultSchema, ContractComparisonResult } from './schemas/contract-comparison-result.schema';
-import { AiProviderFactoryService } from '../ai-provider/ai-provider-factory.service';
-import { AiProviderConfiguration } from '../ai-provider/interfaces/ai-provider-configuration.interface';
+import { Injectable, UnprocessableEntityException } from "@nestjs/common";
+import {
+  ContractComparisonResultSchema,
+  ContractComparisonResult,
+} from "./schemas/contract-comparison-result.schema";
+import { AiProviderFactoryService } from "../ai-provider/ai-provider-factory.service";
+import { AiProviderConfiguration } from "../ai-provider/interfaces/ai-provider-configuration.interface";
+import { generateStructuredObject } from "../ai-provider/generate-structured-object";
 
 @Injectable()
 export class ContractComparisonService {
@@ -13,8 +16,6 @@ export class ContractComparisonService {
     secondContractPlainText: string,
     providerConfiguration: AiProviderConfiguration,
   ): Promise<ContractComparisonResult> {
-    const languageModel = this.aiProviderFactory.resolveLanguageModel(providerConfiguration);
-
     const systemPrompt = `You are a legal document comparison expert specializing in identifying differences between contract versions.
 Your task is to carefully analyze both contract versions and identify all changes, additions, and deletions.
 
@@ -43,14 +44,13 @@ The first contract is the "Original" version.
 The second contract is the "Revised" version.`;
 
     try {
-      const result = await generateObject({
-        model: languageModel,
+      return await generateStructuredObject({
+        aiProviderFactory: this.aiProviderFactory,
+        providerConfiguration,
         schema: ContractComparisonResultSchema,
         system: systemPrompt,
         prompt: userPrompt,
       });
-
-      return result.object;
     } catch (error) {
       if (error instanceof Error) {
         throw new UnprocessableEntityException(
@@ -58,7 +58,7 @@ The second contract is the "Revised" version.`;
         );
       }
       throw new UnprocessableEntityException(
-        'Failed to compare contracts: Unknown error',
+        "Failed to compare contracts: Unknown error",
       );
     }
   }

@@ -13,7 +13,8 @@ export const DEFAULT_MODELS: Record<SupportedAiProvider, string> = {
   [SUPPORTED_AI_PROVIDERS.ANTHROPIC]: 'claude-sonnet-4-20250514',
   [SUPPORTED_AI_PROVIDERS.GROQ]: 'llama-3.3-70b-versatile',
   [SUPPORTED_AI_PROVIDERS.GOOGLE]: 'gemini-1.5-pro',
-  [SUPPORTED_AI_PROVIDERS.MINIMAX]: 'abab6.5s-chat',
+  // MiniMax uses Anthropic-compatible API with model MiniMax-M2.7
+  [SUPPORTED_AI_PROVIDERS.MINIMAX]: 'MiniMax-M2.7',
 };
 
 export const PROVIDER_DISPLAY_NAMES: Record<SupportedAiProvider, string> = {

@@ -4,15 +4,13 @@ import {
   UploadedFile,
   UseInterceptors,
   BadRequestException,
-  Body,
 } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { ContractComparisonService } from './contract-comparison.service';
 import { DocumentParsingService } from '../document-parsing/document-parsing.service';
 import { ContractFileValidationPipe } from '../contract-upload/pipes/contract-file-validation.pipe';
 import { ContractComparisonResult } from './schemas/contract-comparison-result.schema';
-import { AiProviderRequestDtoSchema } from '../common/dto/ai-provider-request.dto';
-import { AiProviderConfiguration } from '../ai-provider/interfaces/ai-provider-configuration.interface';
+import { AiConfigService } from '../ai-config/ai-config.service';
 import { CONTRACT_FILE_UPLOAD } from '../common/constants/contract-file-upload.constant';
 
 @Controller('contract-comparison')
@@ -20,6 +18,7 @@ export class ContractComparisonController {
   constructor(
     private readonly documentParsingService: DocumentParsingService,
     private readonly contractComparisonService: ContractComparisonService,
+    private readonly aiConfigService: AiConfigService,
   ) {}
 
   @Post('compare')
@@ -39,7 +38,6 @@ export class ContractComparisonController {
   async compareContracts(
     @UploadedFile('firstContractFile') firstContractFile: Express.Multer.File | undefined,
     @UploadedFile('secondContractFile') secondContractFile: Express.Multer.File | undefined,
-    @Body('providerConfiguration') providerConfigurationJson: string,
   ): Promise<ContractComparisonResult> {
     // Validate files are present
     if (!firstContractFile) {
@@ -56,16 +54,7 @@ export class ContractComparisonController {
     const validatedFirstFile = firstValidationPipe.transform(firstContractFile);
     const validatedSecondFile = secondValidationPipe.transform(secondContractFile);
 
-    let providerConfiguration: AiProviderConfiguration;
-
-    try {
-      const parsed = JSON.parse(providerConfigurationJson);
-      providerConfiguration = AiProviderRequestDtoSchema.parse(parsed);
-    } catch {
-      throw new BadRequestException(
-        'Invalid providerConfiguration. Must be valid JSON matching the required schema.',
-      );
-    }
+    const providerConfiguration = this.aiConfigService.getProviderConfiguration();
 
     const [firstParsedDocument, secondParsedDocument] = await Promise.all([
       this.documentParsingService.parseDocument(
