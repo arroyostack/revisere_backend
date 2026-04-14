@@ -1,4 +1,4 @@
-import { LanguageModelV1 } from 'ai';
+import { LanguageModelV1 } from "ai";
 
 export interface AiProviderConfiguration {
   providerName: string;
@@ -7,5 +7,7 @@ export interface AiProviderConfiguration {
 }
 
 export interface IAiProviderFactory {
-  resolveLanguageModel(configuration: AiProviderConfiguration): LanguageModelV1;
+  resolveLanguageModel(
+    providerConfiguration: AiProviderConfiguration,
+  ): LanguageModelV1;
 }

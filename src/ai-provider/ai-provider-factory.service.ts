@@ -17,53 +17,55 @@ import {
 @Injectable()
 export class AiProviderFactoryService implements IAiProviderFactory {
   resolveLanguageModel(
-    configuration: AiProviderConfiguration,
+    providerConfiguration: AiProviderConfiguration,
   ): LanguageModelV1 {
-    const providerName = configuration.providerName as SupportedAiProvider;
-    const modelIdentifier =
-      configuration.modelIdentifier || DEFAULT_MODELS[providerName];
+    const selectedProviderName =
+      providerConfiguration.providerName as SupportedAiProvider;
+    const resolvedModelIdentifier =
+      providerConfiguration.modelIdentifier ??
+      DEFAULT_MODELS[selectedProviderName];
 
-    switch (providerName) {
+    switch (selectedProviderName) {
       case SUPPORTED_AI_PROVIDERS.OPENAI: {
         const openaiClient = createOpenAI({
-          apiKey: configuration.apiKey,
+          apiKey: providerConfiguration.apiKey,
         });
-        return openaiClient(modelIdentifier);
+        return openaiClient(resolvedModelIdentifier);
       }
 
       case SUPPORTED_AI_PROVIDERS.ANTHROPIC: {
         const anthropicClient = createAnthropic({
-          apiKey: configuration.apiKey,
+          apiKey: providerConfiguration.apiKey,
         });
-        return anthropicClient(modelIdentifier);
+        return anthropicClient(resolvedModelIdentifier);
       }
 
       case SUPPORTED_AI_PROVIDERS.GROQ: {
         const groqClient = createGroq({
-          apiKey: configuration.apiKey,
+          apiKey: providerConfiguration.apiKey,
         });
-        return groqClient(modelIdentifier);
+        return groqClient(resolvedModelIdentifier);
       }
 
       case SUPPORTED_AI_PROVIDERS.GOOGLE: {
         const googleClient = createGoogleGenerativeAI({
-          apiKey: configuration.apiKey,
+          apiKey: providerConfiguration.apiKey,
         });
-        return googleClient(modelIdentifier);
+        return googleClient(resolvedModelIdentifier);
       }
 
       case SUPPORTED_AI_PROVIDERS.MINIMAX: {
         // MiniMax uses OpenAI-compatible API at https://api.minimax.io/v1
         const minimaxClient = createOpenAI({
-          apiKey: configuration.apiKey,
+          apiKey: providerConfiguration.apiKey,
           baseURL: "https://api.minimax.io/v1",
         });
-        return minimaxClient(modelIdentifier);
+        return minimaxClient(resolvedModelIdentifier);
       }
 
       default:
         throw new Error(
-          `Unsupported AI provider: ${configuration.providerName}`,
+          `Unsupported AI provider: ${providerConfiguration.providerName}`,
         );
     }
   }
