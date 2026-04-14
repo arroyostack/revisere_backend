@@ -1,4 +1,4 @@
-import { Injectable, UnprocessableEntityException } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import {
   ExtractedContractDataSchema,
   ExtractedContractData,
@@ -6,9 +6,15 @@ import {
 import { AiProviderFactoryService } from "../ai-provider/ai-provider-factory.service";
 import { AiProviderConfiguration } from "../ai-provider/interfaces/ai-provider-configuration.interface";
 import { generateStructuredObject } from "../ai-provider/generate-structured-object";
+import { AppError, ErrorCode, sanitizeErrorMessage, ErrorCodeConfig } from "../common/errors";
+
+const MAX_RETRIES = 3;
+const RETRY_DELAYS = [1000, 2000, 4000];
 
 @Injectable()
 export class ContractExtractionService {
+  private readonly logger = new Logger(ContractExtractionService.name);
+
   constructor(private readonly aiProviderFactory: AiProviderFactoryService) {}
 
   async extractContractData(
@@ -34,23 +40,39 @@ Wrap the contract text in <contract_text> tags:
 ${contractPlainText}
 </contract_text>`;
 
-    try {
-      return await generateStructuredObject({
-        aiProviderFactory: this.aiProviderFactory,
-        providerConfiguration,
-        schema: ExtractedContractDataSchema,
-        system: systemPrompt,
-        prompt: userPrompt,
-      });
-    } catch (error) {
-      if (error instanceof Error) {
-        throw new UnprocessableEntityException(
-          `Failed to extract contract data: ${error.message}`,
+    let lastError: Error | unknown;
+
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt += 1) {
+      try {
+        return await generateStructuredObject({
+          aiProviderFactory: this.aiProviderFactory,
+          providerConfiguration,
+          schema: ExtractedContractDataSchema,
+          system: systemPrompt,
+          prompt: userPrompt,
+        });
+      } catch (error) {
+        lastError = error;
+        const retryableCode = sanitizeErrorMessage(error instanceof Error ? error : new Error(String(error)));
+        const errorConfig = ErrorCodeConfig[retryableCode];
+
+        this.logger.error(
+          `AI extraction attempt ${attempt + 1}/${MAX_RETRIES} failed: ${retryableCode}`,
+          error instanceof Error ? error.stack : undefined,
         );
+
+        if (!errorConfig.retryable || attempt === MAX_RETRIES - 1) {
+          throw new AppError(retryableCode, { context: { attempts: attempt + 1 } });
+        }
+
+        await this.delay(RETRY_DELAYS[attempt]);
       }
-      throw new UnprocessableEntityException(
-        "Failed to extract contract data: Unknown error",
-      );
     }
+
+    throw lastError;
+  }
+
+  private delay(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
