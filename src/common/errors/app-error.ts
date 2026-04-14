@@ -25,6 +25,7 @@ function getMessage(code: ErrorCodeType): string {
     PARSE_EMPTY_CONTENT: 'No extractable text found in the uploaded file.',
     PARSE_PDF_FAILED: 'Unable to parse PDF. File may be corrupted or password-protected.',
     PARSE_DOCX_FAILED: 'Unable to parse DOCX. File may be corrupted or password-protected.',
+    PARSE_TIMEOUT: 'File parsing timed out. Please try with a smaller or simpler file.',
     EXTRACT_TIMEOUT: 'AI service temporarily unavailable. Please try again.',
     EXTRACT_RATE_LIMITED: 'AI service rate limit exceeded. Please wait before retrying.',
     EXTRACT_INVALID_RESPONSE: 'Unable to process contract data from AI response.',

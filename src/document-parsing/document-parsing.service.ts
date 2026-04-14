@@ -8,6 +8,8 @@ export interface ParsedDocument {
   originalFileName: string;
 }
 
+const PARSE_TIMEOUT_MS = 30000; // 30 seconds timeout
+
 @Injectable()
 export class DocumentParsingService {
   private readonly logger = new Logger(DocumentParsingService.name);
@@ -20,12 +22,20 @@ export class DocumentParsingService {
     let extractedPlainText: string;
 
     if (uploadedFileMimeType === "application/pdf") {
-      extractedPlainText = await this.parsePdf(uploadedFileBuffer, uploadedOriginalFileName);
+      extractedPlainText = await this.parseWithTimeout(
+        () => this.parsePdf(uploadedFileBuffer, uploadedOriginalFileName),
+        uploadedOriginalFileName,
+        "PDF",
+      );
     } else if (
       uploadedFileMimeType ===
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     ) {
-      extractedPlainText = await this.parseDocx(uploadedFileBuffer, uploadedOriginalFileName);
+      extractedPlainText = await this.parseWithTimeout(
+        () => this.parseDocx(uploadedFileBuffer, uploadedOriginalFileName),
+        uploadedOriginalFileName,
+        "DOCX",
+      );
     } else {
       throw new AppError(ErrorCode.PARSE_UNSUPPORTED_FORMAT);
     }
@@ -38,6 +48,31 @@ export class DocumentParsingService {
       plainText: extractedPlainText,
       originalFileName: uploadedOriginalFileName,
     };
+  }
+
+  private async parseWithTimeout<T>(
+    parseFn: () => Promise<T>,
+    fileName: string,
+    fileType: string,
+  ): Promise<T> {
+    return new Promise((resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        this.logger.error(
+          `Parsing timeout: ${fileType} file ${fileName} exceeded ${PARSE_TIMEOUT_MS}ms`,
+        );
+        reject(new AppError(ErrorCode.PARSE_TIMEOUT));
+      }, PARSE_TIMEOUT_MS);
+
+      parseFn()
+        .then((result) => {
+          clearTimeout(timeoutId);
+          resolve(result);
+        })
+        .catch((error) => {
+          clearTimeout(timeoutId);
+          reject(error);
+        });
+    });
   }
 
   private async parsePdf(
