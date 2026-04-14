@@ -1,12 +1,12 @@
 import {
   Controller,
   Post,
-  UploadedFiles,
+  UploadedFile,
   UseInterceptors,
   BadRequestException,
   Body,
 } from '@nestjs/common';
-import { FilesInterceptor } from '@nestjs/platform-express';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { ContractComparisonService } from './contract-comparison.service';
 import { DocumentParsingService } from '../document-parsing/document-parsing.service';
 import { ContractFileValidationPipe } from '../contract-upload/pipes/contract-file-validation.pipe';
@@ -24,11 +24,12 @@ export class ContractComparisonController {
 
   @Post('compare')
   @UseInterceptors(
-    FilesInterceptor(
-      ['firstContractFile', 'secondContractFile'],
-      2,
+    FileFieldsInterceptor(
+      [
+        { name: 'firstContractFile', maxCount: 1 },
+        { name: 'secondContractFile', maxCount: 1 },
+      ],
       {
-        storage: undefined,
         limits: {
           fileSize: CONTRACT_FILE_UPLOAD.MAX_FILE_SIZE_BYTES,
         },
@@ -36,12 +37,25 @@ export class ContractComparisonController {
     ),
   )
   async compareContracts(
-    @UploadedFiles('firstContractFile', new ContractFileValidationPipe())
-    firstContractFile: Express.Multer.File,
-    @UploadedFiles('secondContractFile', new ContractFileValidationPipe())
-    secondContractFile: Express.Multer.File,
+    @UploadedFile('firstContractFile') firstContractFile: Express.Multer.File | undefined,
+    @UploadedFile('secondContractFile') secondContractFile: Express.Multer.File | undefined,
     @Body('providerConfiguration') providerConfigurationJson: string,
   ): Promise<ContractComparisonResult> {
+    // Validate files are present
+    if (!firstContractFile) {
+      throw new BadRequestException('First contract file is required');
+    }
+    if (!secondContractFile) {
+      throw new BadRequestException('Second contract file is required');
+    }
+
+    // Validate files with the pipe
+    const firstValidationPipe = new ContractFileValidationPipe();
+    const secondValidationPipe = new ContractFileValidationPipe();
+
+    const validatedFirstFile = firstValidationPipe.transform(firstContractFile);
+    const validatedSecondFile = secondValidationPipe.transform(secondContractFile);
+
     let providerConfiguration: AiProviderConfiguration;
 
     try {
@@ -53,19 +67,16 @@ export class ContractComparisonController {
       );
     }
 
-    const firstContract = firstContractFile[0] || firstContractFile;
-    const secondContract = secondContractFile[0] || secondContractFile;
-
     const [firstParsedDocument, secondParsedDocument] = await Promise.all([
       this.documentParsingService.parseDocument(
-        firstContract.buffer,
-        firstContract.originalname,
-        firstContract.mimetype,
+        validatedFirstFile.buffer,
+        validatedFirstFile.originalname,
+        validatedFirstFile.mimetype,
       ),
       this.documentParsingService.parseDocument(
-        secondContract.buffer,
-        secondContract.originalname,
-        secondContract.mimetype,
+        validatedSecondFile.buffer,
+        validatedSecondFile.originalname,
+        validatedSecondFile.mimetype,
       ),
     ]);
 

@@ -1,5 +1,5 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
-import * as pdf from 'pdf-parse';
+import pdf from 'pdf-parse';
 import * as mammoth from 'mammoth';
 
 export interface ParsedDocument {
