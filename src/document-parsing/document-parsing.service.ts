@@ -1,6 +1,6 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
-import pdf from 'pdf-parse';
-import * as mammoth from 'mammoth';
+import { Injectable, BadRequestException } from "@nestjs/common";
+import pdf from "pdf-parse";
+import * as mammoth from "mammoth";
 
 export interface ParsedDocument {
   plainText: string;
@@ -10,54 +10,54 @@ export interface ParsedDocument {
 @Injectable()
 export class DocumentParsingService {
   async parseDocument(
-    fileBuffer: Buffer,
-    originalFileName: string,
-    mimeType: string,
+    uploadedFileBuffer: Buffer,
+    uploadedOriginalFileName: string,
+    uploadedFileMimeType: string,
   ): Promise<ParsedDocument> {
-    let plainText: string;
+    let extractedPlainText: string;
 
-    if (mimeType === 'application/pdf') {
-      plainText = await this.parsePdf(fileBuffer);
+    if (uploadedFileMimeType === "application/pdf") {
+      extractedPlainText = await this.parsePdf(uploadedFileBuffer);
     } else if (
-      mimeType ===
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      uploadedFileMimeType ===
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     ) {
-      plainText = await this.parseDocx(fileBuffer);
+      extractedPlainText = await this.parseDocx(uploadedFileBuffer);
     } else {
       throw new BadRequestException(
-        'Unsupported file type. Only PDF and DOCX files are allowed.',
+        "Unsupported file type. Only PDF and DOCX files are allowed.",
       );
     }
 
-    if (!plainText || plainText.trim().length === 0) {
+    if (!extractedPlainText || extractedPlainText.trim().length === 0) {
       throw new BadRequestException(
-        'No extractable text found in the uploaded file.',
+        "No extractable text found in the uploaded file.",
       );
     }
 
     return {
-      plainText,
-      originalFileName,
+      plainText: extractedPlainText,
+      originalFileName: uploadedOriginalFileName,
     };
   }
 
-  private async parsePdf(fileBuffer: Buffer): Promise<string> {
+  private async parsePdf(uploadedFileBuffer: Buffer): Promise<string> {
     try {
-      const pdfData = await pdf(fileBuffer);
-      return pdfData.text || '';
+      const parsedPdfDocument = await pdf(uploadedFileBuffer);
+      return parsedPdfDocument.text || "";
     } catch (error) {
-      throw new BadRequestException('Failed to parse PDF file.');
+      throw new BadRequestException("Failed to parse PDF file.");
     }
   }
 
-  private async parseDocx(fileBuffer: Buffer): Promise<string> {
+  private async parseDocx(uploadedFileBuffer: Buffer): Promise<string> {
     try {
-      const result = await mammoth.extractRawText({
-        buffer: fileBuffer,
+      const extractedDocxContent = await mammoth.extractRawText({
+        buffer: uploadedFileBuffer,
       });
-      return result.value || '';
+      return extractedDocxContent.value || "";
     } catch (error) {
-      throw new BadRequestException('Failed to parse DOCX file.');
+      throw new BadRequestException("Failed to parse DOCX file.");
     }
   }
 }

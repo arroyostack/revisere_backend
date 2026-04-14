@@ -4,41 +4,47 @@ import {
   ArgumentsHost,
   HttpException,
   HttpStatus,
-} from '@nestjs/common';
-import { Response } from 'express';
-import { ApiErrorResponse } from '../types/api-error-response.type';
+  Logger,
+} from "@nestjs/common";
+import { Request, Response } from "express";
+import { ApiErrorResponse } from "../types/api-error-response.type";
 
 @Catch()
 export class GlobalHttpExceptionFilter implements ExceptionFilter {
+  private readonly logger = new Logger(GlobalHttpExceptionFilter.name);
+
   catch(exception: unknown, host: ArgumentsHost): void {
-    const ctx = host.switchToHttp();
-    const request = ctx.getRequest();
-    const response = ctx.getResponse<Response>();
-    
-    console.error('=== GLOBAL EXCEPTION FILTER ===');
-    console.error('URL:', request.method, request.url);
-    console.error('Status:', exception instanceof HttpException ? (exception as HttpException).getStatus() : 'N/A');
-    console.error('Exception:', exception);
-    console.error('=============================');
-    
+    const httpArgumentsHost = host.switchToHttp();
+    const request = httpArgumentsHost.getRequest<Request>();
+    const response = httpArgumentsHost.getResponse<Response>();
+
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
-    let message = 'Internal server error';
-    let error = 'Internal Server Error';
+    let message = "Internal server error";
+    let error = "Internal Server Error";
 
     if (exception instanceof HttpException) {
       status = exception.getStatus();
       const exceptionResponse = exception.getResponse();
-      
-      if (typeof exceptionResponse === 'object' && exceptionResponse !== null) {
-        const responseObj = exceptionResponse as Record<string, unknown>;
-        message = (responseObj.message as string) || exception.message;
-        error = (responseObj.error as string) || 'Error';
+
+      if (typeof exceptionResponse === "object" && exceptionResponse !== null) {
+        const exceptionResponseBody = exceptionResponse as Record<
+          string,
+          unknown
+        >;
+        message =
+          (exceptionResponseBody.message as string) || exception.message;
+        error = (exceptionResponseBody.error as string) || "Error";
       } else {
         message = exception.message;
       }
     } else if (exception instanceof Error) {
       message = exception.message;
     }
+
+    this.logger.error(
+      `${request.method} ${request.url} failed with status ${status}: ${message}`,
+      exception instanceof Error ? exception.stack : undefined,
+    );
 
     const errorResponse: ApiErrorResponse = {
       statusCode: status,
