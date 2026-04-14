@@ -4,6 +4,7 @@ import {
   UploadedFile,
   UseInterceptors,
 } from "@nestjs/common";
+import { ApiTags, ApiOperation, ApiResponse } from "@nestjs/swagger";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { memoryStorage } from "multer";
 import { ContractExtractionService } from "../contract-extraction/contract-extraction.service";
@@ -15,6 +16,7 @@ import { ContractFullAnalysisResponse } from "./interfaces/contract-full-analysi
 import { AiConfigService } from "../ai-config/ai-config.service";
 import { CONTRACT_FILE_UPLOAD } from "../common/constants/contract-file-upload.constant";
 
+@ApiTags("Contract Analysis")
 @Controller()
 export class ContractUploadController {
   constructor(
@@ -25,6 +27,26 @@ export class ContractUploadController {
     private readonly aiConfigService: AiConfigService,
   ) {}
 
+  @ApiOperation({
+    summary: "Analyze a contract document",
+    description:
+      "Upload a contract document (PDF or DOCX) to receive structured extraction, risk analysis, and plain-English summary. The AI extracts parties, obligations, payment terms, termination conditions, and identifies key clauses.",
+  })
+  @ApiResponse({
+    status: 200,
+    description:
+      "Returns structured contract analysis including extracted data, risk assessment, and summary.",
+  })
+  @ApiResponse({
+    status: 400,
+    description:
+      "Invalid file type or file validation failed. Only PDF and DOCX files are accepted.",
+  })
+  @ApiResponse({
+    status: 413,
+    description:
+      "File size exceeds maximum allowed limit. Maximum file size is 10MB.",
+  })
   @Post("contract-analysis/analyze")
   @UseInterceptors(
     FileInterceptor("contractFile", {

@@ -1,5 +1,6 @@
 import { NestFactory } from "@nestjs/core";
 import { Logger, ValidationPipe } from "@nestjs/common";
+import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
 import { AppModule } from "./app.module";
 import { GlobalHttpExceptionFilter } from "./common/filters/global-http-exception.filter";
 import { ConfigService } from "@nestjs/config";
@@ -27,6 +28,27 @@ async function bootstrap(): Promise<void> {
   );
 
   app.useGlobalFilters(new GlobalHttpExceptionFilter());
+
+  const swaggerDocumentationTitle = "ContractLens Backend API";
+  const swaggerDocumentationDescription =
+    "AI-powered legal contract analysis API. Upload contracts for extraction, risk analysis, summarization, and comparison.";
+  const swaggerDocumentationVersion = "1.0.0";
+  const swaggerDocumentationBaseUrl = "/api/docs";
+
+  const swaggerDocumentationConfiguration = new DocumentBuilder()
+    .setTitle(swaggerDocumentationTitle)
+    .setDescription(swaggerDocumentationDescription)
+    .setVersion(swaggerDocumentationVersion)
+    .addTag("Contract Analysis", "Upload and analyze single contract documents")
+    .addTag("Contract Comparison", "Compare two contract versions")
+    .addTag("Health", "Service health check endpoints")
+    .build();
+
+  const swaggerDocumentation = SwaggerModule.createDocument(
+    app,
+    swaggerDocumentationConfiguration,
+  );
+  SwaggerModule.setup(swaggerDocumentationBaseUrl, app, swaggerDocumentation);
 
   const applicationPort = configService.get<number>("PORT") ?? 3000;
   await app.listen(applicationPort);
