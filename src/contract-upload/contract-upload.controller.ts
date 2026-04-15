@@ -66,10 +66,10 @@ export class ContractUploadController {
     @Req() request: Request,
   ): Promise<ContractFullAnalysisResponse> {
     const clientIp = request.ip || request.connection.remoteAddress || "unknown";
-    
+
     // Check and enforce AI budget limits
     this.aiBudgetService.throwIfBudgetExceeded(clientIp);
-    
+
     const aiProviderConfiguration =
       this.aiConfigService.getProviderConfiguration();
 

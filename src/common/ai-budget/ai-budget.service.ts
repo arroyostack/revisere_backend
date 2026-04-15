@@ -22,7 +22,7 @@ export class AiBudgetService {
   
   // Configuration
   private readonly defaultGlobalDailyBudget: number = 500;
-  private readonly defaultPerIpDailyLimit: number = 10; // 10 AI calls/IP/day = ~3 contract analyses
+  private readonly defaultPerIpDailyLimit: number = 300; // 300 AI calls/IP/day = ~100 contract analyses
 
   constructor(private readonly winstonLoggerService: WinstonLoggerService) {}
 
