@@ -17,7 +17,8 @@ services:
   - type: web
     name: revisere-backend
     runtime: docker
-    region: oregon  # Closest to US users, can change to frankfurt, ohio, singapore, etc.
+    plan: free
+    region: oregon # Closest to US users, can change to frankfurt, ohio, singapore, etc.
 
     # =============================================================================
     # Docker Configuration
@@ -30,17 +31,7 @@ services:
     # =============================================================================
     # Render will monitor this endpoint
     healthCheckPath: /health
-
-    # =============================================================================
-    # Scaling Configuration
-    # =============================================================================
-    # Free tier: 1 instance, sleeps after 15 min of inactivity
-    # Paid tiers: auto-scales based on traffic
-    scaling:
-      minInstances: 1
-      maxInstances: 3
-      targetMemoryPercent: 70
-      targetCPUPercent: 70
+    numInstances: 1
 
     # =============================================================================
     # Environment Variables
@@ -70,13 +61,12 @@ services:
       # =============================================================================
       # REQUIRED: AI Provider Configuration (Set in Render Dashboard as Secrets)
       # =============================================================================
-      # Create these as "Secret" environment variables in Render Dashboard:
-      # - key: AI_PROVIDER
-      #   sync: false  # Will be set in dashboard
-      # - key: AI_API_KEY
-      #   sync: false  # Will be set in dashboard
-      # - key: AI_MODEL_IDENTIFIER
-      #   sync: false  # Will be set in dashboard
+      - key: AI_PROVIDER
+        sync: false
+      - key: AI_API_KEY
+        sync: false
+      - key: AI_MODEL_IDENTIFIER
+        sync: false
 
       # Frontend Origin (update this to your deployed frontend URL)
       - key: FRONTEND_ORIGIN
@@ -85,7 +75,7 @@ services:
 # =============================================================================
 # Notes for Deployment:
 # =============================================================================
-# 
+#
 # 1. Connect GitHub Repository
 #    - Go to https://dashboard.render.com/blueprints
 #    - Click "New Blueprint Instance"
