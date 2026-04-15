@@ -24,7 +24,10 @@ CRITICAL RULES:
 3. Provide plain English explanations that a non-lawyer can understand
 4. Include specific recommended actions for each identified risk
 5. Categorize risks by severity: low, medium, or high
-6. Consider aspects like: unbalanced terms, vague language, missing protections, unusual obligations, auto-renewal clauses, unlimited liability, etc.`;
+6. overallRiskLevel must be a plain string value: low, medium, or high
+7. Each riskFlags[].riskSeverity must be a plain string value: low, medium, or high
+8. Do not wrap severity values in objects like {"level":"high"} or {"severity":"medium"}
+9. Consider aspects like: unbalanced terms, vague language, missing protections, unusual obligations, auto-renewal clauses, unlimited liability, etc.`;
 
     const userPrompt = `Analyze the following contract for potential risks and red flags.
 Wrap the contract text in <contract_text> tags:

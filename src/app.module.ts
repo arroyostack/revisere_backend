@@ -34,10 +34,8 @@ import { RateLimitingMiddleware } from "./common/middleware/rate-limiting.middle
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
-    consumer
-      .apply(HttpLoggingMiddleware)
-      .forRoutes("*")
-      .apply(RateLimitingMiddleware)
-      .forRoutes("*");
+    consumer.apply(HttpLoggingMiddleware).forRoutes("*");
+    // TODO: Re-enable rate limiting once the underlying issue is resolved
+    consumer.apply(RateLimitingMiddleware).forRoutes("*");
   }
 }
