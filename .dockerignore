@@ -1,0 +1,107 @@
+# =============================================================================
+# Docker Build Context Exclusion Rules
+# =============================================================================
+# Purpose: Exclude files that are not needed in the Docker build context.
+#         This keeps the image small and build fast by reducing context transfer.
+#
+# Rules:
+# - Development files excluded ( tested locally, not needed in container )
+# - Version control excluded ( handled by registry, not container )
+# - IDE configurations excluded ( developer-specific, not needed in container )
+# - Documentation excluded ( reduces image size, can be on registry separately )
+# =============================================================================
+
+# =============================================================================
+# Node.js Development Artifacts
+# =============================================================================
+# Excluded: Source code is compiled in the builder stage.
+# Included: Only the compiled dist/ folder is copied to the runtime image.
+node_modules/
+dist/
+build/
+
+# TypeScript incremental build cache ( not needed in production )
+*.tsbuildinfo
+
+# =============================================================================
+# Testing Artifacts
+# =============================================================================
+# Excluded: Tests are not run in the container.
+# Included: Test results can be used for debugging if needed.
+coverage/
+.nyc Output/
+htmlcov/
+.jest/
+vitest/
+
+# =============================================================================
+# Development Configuration
+# =============================================================================
+# Excluded: Environment-specific, not needed in container
+.env
+.env.local
+.env.*.local
+
+# =============================================================================
+# Version Control
+# =============================================================================
+# Excluded: Handled by Git, not needed in Docker build
+.git/
+.gitignore
+
+# =============================================================================
+# IDE and Editor Configuration
+# =============================================================================
+# Excluded: Developer-specific, not needed in container
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# =============================================================================
+# Documentation and Configuration Files Not Needed in Container
+# =============================================================================
+# Excluded: These files are for development, not container execution
+README.md
+ISSUE.md
+CONTRIBUTING.md
+LICENSE.md
+
+# Excluded: Only Dockerfile is needed, not compose or Koyeb configs ( those can be in repo root )
+docker-compose*.yml
+docker-compose*.yaml
+docker-compose*.json
+koyeb.yaml
+
+# =============================================================================
+# Operating System Artifacts ( macOS )
+# =============================================================================
+# Excluded: System-generated files, not needed in container
+.DS_Store
+.Trashes
+._*
+
+# =============================================================================
+# Temporary Files
+# =============================================================================
+# Excluded: Temporary files, not needed in build
+tmp/
+temp/
+*.tmp
+*.temp
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# =============================================================================
+# Security and Secrets
+# =============================================================================
+# Excluded: Secrets should be passed via environment variables, not baked into image
+*.pem
+*.key
+*.crt
+*.cert
+secrets/

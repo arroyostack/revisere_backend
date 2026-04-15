@@ -1,0 +1,160 @@
+# =============================================================================
+# Koyeb Deployment Configuration
+# =============================================================================
+# Purpose: Define how Koyeb builds and deploys the ContractLens Backend API.
+# Documentation: https://koyeb.com/docs/configuration
+#
+# This file defines:
+# - Build configuration ( using Dockerfile in repository root )
+# - Runtime port ( matching EXPOSE 3000 in Dockerfile )
+# - Environment variables ( sourced from Koyeb dashboard or secrets )
+# - Health check ( using the /health endpoint )
+# =============================================================================
+
+# =============================================================================
+# Service Definition
+# =============================================================================
+# Purpose: Defines the service name and deployment configuration.
+# =============================================================================
+service:
+  # Unique name for this service ( used in Koyeb dashboard )
+  name: contractlens-backend
+  # Region: Geographic location for the deployment
+  # Options: eu, us ( default: us )
+  # Note: Choose region closest to your users for lowest latency
+  region: us
+
+  # =============================================================================
+  # Build Configuration
+  # =============================================================================
+  # Purpose: Defines how Koyeb builds the Docker image.
+  # Note: Koyeb automatically builds from the Dockerfile in repository root.
+  # =============================================================================
+  build:
+    # Build context: The root directory for Docker build
+    # Note: '.' refers to the repository root where this file resides
+    context: .
+    # Docker build command ( optional - uses Dockerfile in context root by default )
+    # dockerfile: Dockerfile
+
+  # =============================================================================
+  # Port Configuration
+  # =============================================================================
+  # Purpose: Define the HTTP port exposed to the internet.
+  # Note: targetPort must match EXPOSE in Dockerfile ( 3000 )
+  # =============================================================================
+  ports:
+    # HTTP port exposed to the internet
+    - port: 80
+      # Internal port where the application listens ( matches Dockerfile EXPOSE 3000 )
+      targetPort: 3000
+      # Protocol: http, http2, or tcp
+      protocol: http
+
+  # =============================================================================
+  # Environment Variables
+  # =============================================================================
+  # Purpose: Configure application behavior at runtime.
+  # Note: Set sensitive values in Koyeb dashboard or secrets, not here.
+  #
+  # Required environment variables:
+  # - AI_PROVIDER: openai, anthropic, groq, google, or minimax
+  # - AI_API_KEY: API key for your chosen AI provider
+  # =============================================================================
+  env:
+    # Application port ( must match Dockerfile EXPOSE )
+    - name: PORT
+      value: "3000"
+
+    # Node environment ( enables production optimizations )
+    - name: NODE_ENV
+      value: production
+
+    # Logging level
+    # Options: error, warn, info, debug, verbose
+    - name: LOG_LEVEL
+      value: info
+
+    # =============================================================================
+    # AI Provider Configuration ( REQUIRED )
+    # =============================================================================
+    # Purpose: Configure the AI provider for contract analysis.
+    # Note: Set AI_API_KEY in Koyeb secrets, not here.
+    #
+    # Supported providers:
+    # - openai: GPT-4 models ( default )
+    # - anthropic: Claude models
+    # - groq: Fast inference
+    # - google: Gemini models
+    # - minimax: Vercel Minimax
+    # =============================================================================
+    - name: AI_PROVIDER
+      value: openai
+
+    # AI Model Identifier ( provider-specific )
+    # Examples:
+    # - openai: gpt-4o, gpt-4-turbo, gpt-3.5-turbo
+    # - anthropic: claude-3-5-sonnet-20241002, claude-3-opus-20240229
+    # - groq: llama-3.1-70b-versatile, mixtral-8x7b-32768
+    # - google: gemini-1.5-pro, gemini-1.5-flash
+    # - minimax: MiniMax-Text-01
+    # - name: AI_MODEL_IDENTIFIER
+    #   value: gpt-4o
+
+    # =============================================================================
+    # Rate Limiting Configuration
+    # =============================================================================
+    # Purpose: Configure API rate limiting.
+    # Note: Adjust based on your pricing tier and expected traffic.
+    # =============================================================================
+    - name: RATE_LIMIT_MAX_REQUESTS
+      value: "100"
+
+    - name: RATE_LIMIT_WINDOW_SECONDS
+      value: "60"
+
+  # =============================================================================
+  # Health Check Configuration
+  # =============================================================================
+  # Purpose: Verify the application is healthy before routing traffic.
+  # Note: Uses the /health endpoint from HealthController.
+  # =============================================================================
+  healthCheck:
+    # HTTP path for health check ( must exist and return 2xx )
+    path: /health
+    # Interval between checks
+    interval: 30s
+    # Timeout for each check
+    timeout: 5s
+    # Initial grace period before first check
+    startPeriod: 10s
+
+  # =============================================================================
+  # Scaling Configuration ( optional )
+  # =============================================================================
+  # Purpose: Configure automatic scaling based on demand.
+  # Note: Only available on paid plans.
+  # =============================================================================
+  # autoscaling:
+  #   # Minimum number of instances
+  #   minInstances: 1
+  #   # Maximum number of instances
+  #   maxInstances: 3
+  #   # CPU threshold for scaling ( percentage )
+  #   cpuThreshold: 70
+
+# =============================================================================
+# Volumes ( for persistent storage )
+# =============================================================================
+# Purpose: Mount persistent storage for files that must survive restarts.
+# Note: Not needed for this stateless API.
+# =============================================================================
+# volumes: []
+
+# =============================================================================
+# Domains ( custom domain configuration )
+# =============================================================================
+# Purpose: Map a custom domain to this service.
+# Note: Configure in Koyeb dashboard after initial deployment.
+# =============================================================================
+# domains: []
