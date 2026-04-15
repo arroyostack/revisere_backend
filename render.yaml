@@ -1,7 +1,7 @@
 # =============================================================================
 # Render Blueprint Configuration
 # =============================================================================
-# Purpose: Define the ContractLens Backend service for Render deployment.
+# Purpose: Define the Revisere Backend service for Render deployment.
 # Documentation: https://render.com/docs/blueprint-spec
 #
 # This file enables:
@@ -40,15 +40,19 @@ services:
     envVars:
       # Application Configuration
       - key: PORT
-        value: "3000"
+        value: "3500"
       - key: NODE_ENV
         value: production
+      - key: FRONTEND_ORIGIN
+        value: http://localhost:5173
+      - key: AI_PROVIDER
+        value: minimax
       - key: LOG_LEVEL
         value: info
 
       # Rate Limiting (adjust based on your Render plan)
       - key: RATE_LIMIT_MAX_REQUESTS
-        value: "100"
+        value: "20"
       - key: RATE_LIMIT_WINDOW_SECONDS
         value: "60"
 
@@ -61,16 +65,8 @@ services:
       # =============================================================================
       # REQUIRED: AI Provider Configuration (Set in Render Dashboard as Secrets)
       # =============================================================================
-      - key: AI_PROVIDER
-        sync: false
       - key: AI_API_KEY
         sync: false
-      - key: AI_MODEL_IDENTIFIER
-        sync: false
-
-      # Frontend Origin (update this to your deployed frontend URL)
-      - key: FRONTEND_ORIGIN
-        value: https://your-frontend-url.com
 
 # =============================================================================
 # Notes for Deployment:
@@ -87,7 +83,6 @@ services:
 #    After connecting, go to your service → Environment tab and set:
 #    - AI_PROVIDER (openai, anthropic, groq, google, or minimax)
 #    - AI_API_KEY (your AI provider API key)
-#    - AI_MODEL_IDENTIFIER (e.g., gpt-4o, claude-3-5-sonnet-20241002)
 #    - FRONTEND_ORIGIN (your deployed frontend URL)
 #
 # 3. Automatic Deployments

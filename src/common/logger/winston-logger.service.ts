@@ -12,17 +12,21 @@ export class WinstonLoggerService implements LoggerService {
       format: winston.format.combine(
         winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
         winston.format.errors({ stack: true }),
-        winston.format.json()
+        winston.format.json(),
       ),
-      defaultMeta: { service: "contractlens-backend" },
+      defaultMeta: { service: "revisere-backend" },
       transports: [
         new winston.transports.Console({
           format: winston.format.combine(
             winston.format.colorize(),
-            winston.format.printf(({ timestamp, level, message, context, ...rest }) => {
-              const meta = Object.keys(rest).length ? JSON.stringify(rest) : "";
-              return `${timestamp} [${level}] ${context ? `[${context}] ` : ""}${message} ${meta}`;
-            })
+            winston.format.printf(
+              ({ timestamp, level, message, context, ...rest }) => {
+                const meta = Object.keys(rest).length
+                  ? JSON.stringify(rest)
+                  : "";
+                return `${timestamp} [${level}] ${context ? `[${context}] ` : ""}${message} ${meta}`;
+              },
+            ),
           ),
         }),
       ],
@@ -49,7 +53,13 @@ export class WinstonLoggerService implements LoggerService {
     this.logger.verbose(message, { context });
   }
 
-  logHttpRequest(requestMethod: string, requestUrl: string, requestIpAddress: string, userAgent: string, requestId: string): void {
+  logHttpRequest(
+    requestMethod: string,
+    requestUrl: string,
+    requestIpAddress: string,
+    userAgent: string,
+    requestId: string,
+  ): void {
     this.logger.info("Incoming HTTP request", {
       context: "HTTP",
       httpRequestMethod: requestMethod,
@@ -60,7 +70,11 @@ export class WinstonLoggerService implements LoggerService {
     });
   }
 
-  logHttpResponse(requestId: string, responseStatusCode: number, responseLatencyMs: number): void {
+  logHttpResponse(
+    requestId: string,
+    responseStatusCode: number,
+    responseLatencyMs: number,
+  ): void {
     this.logger.info("Outgoing HTTP response", {
       context: "HTTP",
       httpRequestId: requestId,
@@ -69,7 +83,11 @@ export class WinstonLoggerService implements LoggerService {
     });
   }
 
-  logAIOperationStart(operationName: string, providerName: string, modelIdentifier: string): void {
+  logAIOperationStart(
+    operationName: string,
+    providerName: string,
+    modelIdentifier: string,
+  ): void {
     this.logger.info("AI operation starting", {
       context: "AI",
       aiOperationName: operationName,
@@ -78,7 +96,11 @@ export class WinstonLoggerService implements LoggerService {
     });
   }
 
-  logAIOperationSuccess(operationName: string, providerName: string, latencyMs: number): void {
+  logAIOperationSuccess(
+    operationName: string,
+    providerName: string,
+    latencyMs: number,
+  ): void {
     this.logger.info("AI operation completed", {
       context: "AI",
       aiOperationName: operationName,
@@ -87,7 +109,11 @@ export class WinstonLoggerService implements LoggerService {
     });
   }
 
-  logAIOperationFailure(operationName: string, providerName: string, errorMessage: string): void {
+  logAIOperationFailure(
+    operationName: string,
+    providerName: string,
+    errorMessage: string,
+  ): void {
     this.logger.error("AI operation failed", {
       context: "AI",
       aiOperationName: operationName,

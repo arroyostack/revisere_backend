@@ -1,7 +1,7 @@
 {
   "name": "contractlens-backend",
   "version": "1.0.0",
-  "description": "ContractLens Backend - AI-powered legal contract analysis API",
+  "description": "Revisere Backend - AI-powered legal contract analysis API",
   "main": "dist/main.js",
   "scripts": {
     "build": "tsc --incremental false",
