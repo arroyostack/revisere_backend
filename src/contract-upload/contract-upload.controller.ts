@@ -3,10 +3,12 @@ import {
   Post,
   UploadedFile,
   UseInterceptors,
+  Req,
 } from "@nestjs/common";
-import { ApiTags, ApiOperation, ApiResponse } from "@nestjs/swagger";
+import { ApiTags, ApiOperation, ApiResponse, ApiHeader } from "@nestjs/swagger";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { memoryStorage } from "multer";
+import { Request } from "express";
 import { ContractExtractionService } from "../contract-extraction/contract-extraction.service";
 import { ContractRiskAnalysisService } from "../contract-risk-analysis/contract-risk-analysis.service";
 import { ContractSummaryService } from "../contract-summary/contract-summary.service";
@@ -14,6 +16,7 @@ import { DocumentParsingService } from "../document-parsing/document-parsing.ser
 import { ContractFileValidationPipe } from "./pipes/contract-file-validation.pipe";
 import { ContractFullAnalysisResponse } from "./interfaces/contract-full-analysis-response.interface";
 import { AiConfigService } from "../ai-config/ai-config.service";
+import { AiBudgetService } from "../common/ai-budget/ai-budget.service";
 import { CONTRACT_FILE_UPLOAD } from "../common/constants/contract-file-upload.constant";
 
 @ApiTags("Contract Analysis")
@@ -25,6 +28,7 @@ export class ContractUploadController {
     private readonly contractRiskAnalysisService: ContractRiskAnalysisService,
     private readonly contractSummaryService: ContractSummaryService,
     private readonly aiConfigService: AiConfigService,
+    private readonly aiBudgetService: AiBudgetService,
   ) {}
 
   @ApiOperation({
@@ -59,7 +63,13 @@ export class ContractUploadController {
   async analyzeContract(
     @UploadedFile(new ContractFileValidationPipe())
     uploadedContractFile: Express.Multer.File,
+    @Req() request: Request,
   ): Promise<ContractFullAnalysisResponse> {
+    const clientIp = request.ip || request.connection.remoteAddress || "unknown";
+
+    // Check and enforce AI budget limits
+    this.aiBudgetService.throwIfBudgetExceeded(clientIp);
+
     const aiProviderConfiguration =
       this.aiConfigService.getProviderConfiguration();
 
@@ -85,6 +95,9 @@ export class ContractUploadController {
           aiProviderConfiguration,
         ),
       ]);
+
+    // Record AI calls (3 calls: extraction, risk, summary)
+    this.aiBudgetService.recordContractAnalysis(clientIp);
 
     return {
       originalFileName: parsedContractDocument.originalFileName,

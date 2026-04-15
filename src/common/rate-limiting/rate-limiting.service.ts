@@ -16,7 +16,7 @@ interface RateLimiterConfiguration {
 export class RateLimitingService {
   private readonly requestCountsByIp: Map<string, RateLimitEntry> = new Map();
   private readonly defaultRateLimiterConfiguration: RateLimiterConfiguration = {
-    maximumRequestsPerWindow: 100,
+    maximumRequestsPerWindow: 20,
     windowDurationInSeconds: 60,
   };
 

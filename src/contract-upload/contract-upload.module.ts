@@ -4,6 +4,7 @@ import { DocumentParsingModule } from '../document-parsing/document-parsing.modu
 import { ContractExtractionModule } from '../contract-extraction/contract-extraction.module';
 import { ContractRiskAnalysisModule } from '../contract-risk-analysis/contract-risk-analysis.module';
 import { ContractSummaryModule } from '../contract-summary/contract-summary.module';
+import { AiBudgetModule } from '../common/ai-budget/ai-budget.module';
 
 @Module({
   imports: [
@@ -11,6 +12,7 @@ import { ContractSummaryModule } from '../contract-summary/contract-summary.modu
     ContractExtractionModule,
     ContractRiskAnalysisModule,
     ContractSummaryModule,
+    AiBudgetModule,
   ],
   controllers: [ContractUploadController],
 })

@@ -23,7 +23,7 @@ describe("RateLimitingService", () => {
 
       const configuration = rateLimitingService.getRateLimiterConfiguration();
 
-      expect(configuration.maximumRequestsPerWindow).toBe(100);
+      expect(configuration.maximumRequestsPerWindow).toBe(20);
       expect(configuration.windowDurationInSeconds).toBe(60);
     });
 
@@ -65,7 +65,7 @@ describe("RateLimitingService", () => {
     it("should track request counts correctly", () => {
       const clientIpAddress = "192.168.1.3";
 
-      for (let requestIndex = 0; requestIndex < 99; requestIndex++) {
+      for (let requestIndex = 0; requestIndex < 19; requestIndex++) {
         const isExceeded = rateLimitingService.isRateLimitExceeded(clientIpAddress);
         expect(isExceeded).toBe(false);
       }
@@ -78,7 +78,7 @@ describe("RateLimitingService", () => {
 
       const remainingRequests = rateLimitingService.getRemainingRequests(clientIpAddress);
 
-      expect(remainingRequests).toBe(100);
+      expect(remainingRequests).toBe(20);
     });
 
     it("should return correct remaining requests after some requests", () => {
@@ -90,7 +90,7 @@ describe("RateLimitingService", () => {
 
       const remainingRequests = rateLimitingService.getRemainingRequests(clientIpAddress);
 
-      expect(remainingRequests).toBe(97);
+      expect(remainingRequests).toBe(17);
     });
   });
 

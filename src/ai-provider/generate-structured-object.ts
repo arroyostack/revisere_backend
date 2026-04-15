@@ -64,7 +64,7 @@ function extractJsonObjectCandidates(text: string): string[] {
 
       if (depth === 0) {
         candidates.add(normalizedText.slice(start, index + 1));
-        break;
+        // Removed break - continue to find all JSON object candidates
       }
     }
   }
