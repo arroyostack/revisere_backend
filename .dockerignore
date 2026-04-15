@@ -68,11 +68,11 @@ ISSUE.md
 CONTRIBUTING.md
 LICENSE.md
 
-# Excluded: Only Dockerfile is needed, not compose or Koyeb configs ( those can be in repo root )
+# Excluded: Only Dockerfile is needed, not compose or Render configs
 docker-compose*.yml
 docker-compose*.yaml
 docker-compose*.json
-koyeb.yaml
+render.yaml
 
 # =============================================================================
 # Operating System Artifacts ( macOS )
