@@ -1,7 +1,7 @@
 import {
   Controller,
   Post,
-  UploadedFile,
+  UploadedFiles,
   UseInterceptors,
   BadRequestException,
 } from "@nestjs/common";
@@ -58,11 +58,17 @@ export class ContractComparisonController {
     ),
   )
   async compareContracts(
-    @UploadedFile("firstContractFile")
-    firstContractFile: Express.Multer.File | undefined,
-    @UploadedFile("secondContractFile")
-    secondContractFile: Express.Multer.File | undefined,
+    @UploadedFiles()
+    uploadedContractFiles:
+      | {
+          firstContractFile?: Express.Multer.File[];
+          secondContractFile?: Express.Multer.File[];
+        }
+      | undefined,
   ): Promise<ContractComparisonResult> {
+    const firstContractFile = uploadedContractFiles?.firstContractFile?.[0];
+    const secondContractFile = uploadedContractFiles?.secondContractFile?.[0];
+
     // Validate files are present
     if (!firstContractFile) {
       throw new BadRequestException("First contract file is required");
