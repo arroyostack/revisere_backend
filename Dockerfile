@@ -1,4 +1,4 @@
-# Multi-stage Dockerfile for ContractLens Backend API
+# Multi-stage Dockerfile for Revisere Backend API
 # Stage 1: Build the TypeScript application
 # =============================================================================
 # Purpose: Compile TypeScript source code into optimized JavaScript for production.
@@ -52,7 +52,7 @@ FROM docker.io/node:20-alpine AS production_runtime
 
 # Set metadata for the runtime stage
 LABEL stage="production_runtime"
-LABEL description="Runs the compiled ContractLens Backend API"
+LABEL description="Runs the compiled Revisere Backend API"
 
 # Create non-root user for security ( must match GID/UID from builder stage )
 # Note: Using 1001 to match builder stage and avoid conflicts
@@ -100,7 +100,7 @@ EXPOSE 3000
 # Retries:  Container will be restarted after 3 consecutive failures
 # =============================================================================
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD wget -qO- http://localhost:3000/health || exit 1
+    CMD sh -c 'wget -qO- "http://localhost:${PORT:-3000}/health" || exit 1'
 
 # Set default environment variables with sensible defaults
 # ==============================================================================

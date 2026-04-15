@@ -13,7 +13,7 @@ export class HealthController {
   @ApiOperation({
     summary: "Service health check",
     description:
-      "Returns the current health status of the ContractLens Backend service. Use this endpoint to verify the service is running and responsive.",
+      "Returns the current health status of the Revisere Backend service. Use this endpoint to verify the service is running and responsive.",
   })
   @ApiResponse({
     status: 200,

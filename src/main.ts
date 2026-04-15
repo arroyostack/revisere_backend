@@ -29,7 +29,7 @@ async function bootstrap(): Promise<void> {
 
   app.useGlobalFilters(new GlobalHttpExceptionFilter());
 
-  const swaggerDocumentationTitle = "ContractLens Backend API";
+  const swaggerDocumentationTitle = "Revisere Backend API";
   const swaggerDocumentationDescription =
     "AI-powered legal contract analysis API. Upload contracts for extraction, risk analysis, summarization, and comparison.";
   const swaggerDocumentationVersion = "1.0.0";
@@ -53,7 +53,7 @@ async function bootstrap(): Promise<void> {
   const applicationPort = configService.get<number>("PORT") ?? 3000;
   await app.listen(applicationPort);
   bootstrapLogger.log(
-    `ContractLens Backend running on http://localhost:${applicationPort}`,
+    `Revisere Backend running on http://localhost:${applicationPort}`,
   );
 }
 
