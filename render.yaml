@@ -36,7 +36,6 @@ services:
     # =============================================================================
     # Free tier: 1 instance, sleeps after 15 min of inactivity
     # Paid tiers: auto-scales based on traffic
-    numInstances: 1
     scaling:
       minInstances: 1
       maxInstances: 3
@@ -81,9 +80,7 @@ services:
 
       # Frontend Origin (update this to your deployed frontend URL)
       - key: FRONTEND_ORIGIN
-        fromDatabase:
-          # Leave empty, set actual frontend URL after deployment
-          value: https://your-frontend-url.com
+        value: https://your-frontend-url.com
 
 # =============================================================================
 # Notes for Deployment:
